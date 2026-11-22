@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Luyện nghe TOEIC Part 3</title>
+<link rel="stylesheet" href="study.css">
+<script defer src="part3/data.js"></script>
+<script defer src="question-emphasis.js"></script>
+<script defer src="learning-data.js"></script>
+<script defer src="study.js"></script>
+</head>
+<body>
+<header class="mast"><div class="shell mast-inner">
+  <a class="brand" href="./"><span class="logo" aria-hidden="true">▂▅▇▅▂</span> TOEIC <b>Part 3</b></a>
+  <div class="backup"><button id="export" type="button">Xuất tiến độ</button><button id="import" type="button">Nhập tiến độ</button><input id="backup-file" type="file" accept=".json,application/json" hidden></div>
+</div></header>
+<main class="shell">
+  <div class="intro"><p class="eyebrow">LUYỆN NGHE TOEIC</p><h1>Hội thoại Part 3</h1>
+    <p>Làm bài, chọn cụm nghe chưa ra và nghe lại theo câu.</p></div>
+  <nav id="steps" aria-label="Các màn hình học"></nav>
+  <div id="notice" role="status"></div>
+  <section id="screen" aria-label="Nội dung buổi học"></section>
+</main>
+<script>window.addEventListener('error',e=>{if(e.target.src?.includes('/part3/data.js'))document.querySelector('#notice').textContent='Không tải được part3/data.js.'},true)</script>
+</body>
+</html>
+
