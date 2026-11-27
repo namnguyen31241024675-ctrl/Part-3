@@ -736,14 +736,21 @@ function renderDrill() {
   const transcript = start < 0 ? escape(sentence?.text) :
     escape(sentence.text.slice(0,start)) + '<mark>' + escape(clue) + '</mark>' +
     escape(sentence.text.slice(start+clue.length));
-  return `${heading}<p class="muted">Bài ${drillIndex+1}/${lessons.length}</p>
-    <p>${escape(lead)}</p>
-    ${button('Nghe đoạn audio','drill-play','class="primary"')}
+  return `<div class="drill-heading">
+      ${heading}
+      <p class="drill-progress">Bài ${drillIndex+1}/${lessons.length}</p>
+    </div>
+    <div class="drill-listen">
+      <p>${escape(lead)}</p>
+      ${button('<span class="play-icon" aria-hidden="true"></span>Nghe đoạn audio','drill-play','class="primary"')}
+    </div>
     <fieldset class="drill-question">
       <legend>${escape(question)}</legend>
       <div id="drill-options">
         <div class="drill-choices" lang="en">
-          ${choices.map((choice,index) => button(escape(choice),'drill-answer',`data-index="${index}"`)).join('')}
+          ${choices.map((choice,index) => button(
+            `<span class="drill-choice-key" aria-hidden="true">${'ABCD'[index]}</span>${escape(choice)}`,
+            'drill-answer',`data-index="${index}"`)).join('')}
         </div>
         ${button('Chưa nghe ra','drill-answer','data-index="-1"')}
       </div>
@@ -751,8 +758,11 @@ function renderDrill() {
     <section class="answer-text drill-explanation" aria-labelledby="drill-clue" hidden>
       <h3 id="drill-clue" tabindex="-1">Lời giải</h3>
       <p id="drill-feedback" role="status"></p>
-      <p lang="en"><strong>${escape(clue)} ↔ ${escape(choices[correct])}</strong></p>
-      <p lang="en">${transcript}</p>
+      <div class="drill-pair">
+        <div><span>Cụm nghe được</span><strong lang="en">${escape(clue)}</strong></div>
+        <div><span>Cách diễn đạt tương đương</span><strong lang="en">${escape(choices[correct])}</strong></div>
+      </div>
+      <p class="drill-transcript" lang="en">${transcript}</p>
       <p>${escape(explanation)}</p>
     </section>
     <div class="actions" id="drill-actions" hidden>

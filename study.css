@@ -284,13 +284,27 @@ fieldset legend .question-focus{color:#B42318}
 .meaning-result[data-result="correct"] {color:#215932}
 .meaning-result[data-result="retry"] {color:#4b5563}
 
-.drill-question {border:0;padding-bottom:.7rem}
-.drill-choices {display:grid;gap:.45rem;max-width:32rem}
-.drill-choices button {text-align:start}
+.panel:has(.drill-heading) {max-width:48rem;margin-inline:auto}
+.drill-heading {display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:.25rem 1rem;margin-bottom:1rem}
+.drill-heading h2,.drill-progress {margin:0}
+.drill-progress {color:var(--muted);font-size:.9rem;font-weight:650;font-variant-numeric:tabular-nums}
+.drill-listen {padding:1rem;background:var(--soft);border-radius:12px}
+.drill-listen p {margin:0 0 .65rem}
+.drill-listen button {display:inline-flex;align-items:center;gap:.65rem}
+.drill-question {border:0;padding:1rem 0}
+.drill-question legend {font-weight:700;margin-bottom:.55rem}
+.drill-choices {display:grid;gap:.45rem}
+.drill-choices button {display:flex;align-items:center;gap:.7rem;text-align:start;font-weight:550}
+.drill-choice-key {display:grid;place-items:center;flex:0 0 1.6rem;min-height:1.6rem;border-radius:6px;background:#f5eeeb;color:var(--deep);font-size:.85rem;font-weight:750}
+#drill-options > button {margin-top:.5rem}
+#drill-options button[aria-pressed="true"] {background:var(--soft);border-color:var(--red)}
 .drill-explanation {margin-bottom:1rem;font-size:1rem}
 .drill-explanation p:last-child {margin-bottom:0}
-#drill-options > button {margin-top:.65rem}
-#drill-options button[aria-pressed="true"] {background:var(--soft);border-color:var(--red)}
+.drill-pair {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:.5rem;margin-bottom:.9rem}
+.drill-pair > div {padding:.65rem .75rem;background:#fff;border:1px solid var(--line);border-radius:8px}
+.drill-pair span,.drill-pair strong {display:block}
+.drill-pair span {color:var(--muted);font-size:.85rem}
+.drill-transcript {line-height:1.75}
 html:has(#drill-actions) {overflow-anchor:none}
 #drill-actions:has([data-action="drill-explanation"]:not([hidden])) {
   position:sticky;
