@@ -735,34 +735,27 @@ function showPage(next) {
 }
 
 function go(next) {
-  if (next === 'transcript' && location.pathname !== '/chua-bai') {
-    if (save()) location.assign(reviewAddress(state.current));
-    return;
-  }
-  if (location.pathname === '/chua-bai' && next !== 'transcript') {
-    if (next === 'quiz') {
-      if (save()) location.assign('/');
-      return;
-    }
-    history.pushState(null,'','/');
+  if (next === 'transcript') {
+    if (!save()) return;
+    history.pushState(null,'',reviewAddress(state.current));
+  } else if (location.hash.startsWith('#chua-bai/')) {
+    history.pushState(null,'',location.pathname + location.search);
   }
   showPage(next);
 }
 
 function reviewAddress(id) {
-  return '/chua-bai?hoi-thoai=' + encodeURIComponent(id);
+  return '#chua-bai/' + encodeURIComponent(id);
 }
 
 function pageFromAddress() {
-  const isReview = location.pathname === '/chua-bai';
   const legacy = /^#chua-bai\/([\w-]+)$/.exec(location.hash);
-  const id = isReview ? new URLSearchParams(location.search).get('hoi-thoai') : legacy?.[1];
+  const id = legacy?.[1];
   if (id && byId.has(id) && state.attempts[id]?.checked) {
     state.current = id;
-    if (legacy) history.replaceState(null,'',reviewAddress(id));
     return 'transcript';
   }
-  if (isReview || legacy) history.replaceState(null,'','/');
+  if (legacy) history.replaceState(null,'',location.pathname + location.search);
   return 'quiz';
 }
 
