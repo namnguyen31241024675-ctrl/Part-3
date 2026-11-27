@@ -283,3 +283,9 @@ fieldset legend .question-focus{color:#B42318}
 .meaning-result:empty {display:none}
 .meaning-result[data-result="correct"] {color:#215932}
 .meaning-result[data-result="retry"] {color:#4b5563}
+
+.drill-question {border:0;padding-bottom:.7rem}
+.drill-choices {display:grid;gap:.45rem;max-width:32rem}
+.drill-choices button {text-align:start}
+.drill-explanation {margin-bottom:1rem;font-size:1rem}
+.drill-explanation p:last-child {margin-bottom:0}

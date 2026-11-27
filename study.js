@@ -50,9 +50,17 @@ const phraseKey = item => JSON.stringify([item.groupId,item.sentenceId,item.star
 const sentenceId = (sentence,index) => String(sentence.id ?? index);
 const getSentence = item => studySource(byId.get(item.groupId),item.sentenceId);
 const statusLabel = {new:'Chưa luyện', stuck:'Còn vướng', clear:'Nghe ra rồi'};
-const labels = {quiz:'Làm bài', transcript:'Chữa bài', practice:'Luyện cụm', review:'Ôn lại', finish:'Kết thúc'};
+const drillGroups = listeningDrillGroups.filter(category => category.lessons.length);
+const labels = {quiz:'Làm bài', ...(drillGroups.length ? {drill:'Luyện theo nhóm'} : {}),
+  transcript:'Chữa bài', practice:'Luyện cụm', review:'Ôn lại', finish:'Kết thúc'};
 const button = (text, action, attrs='') => `<button type="button" data-action="${action}" ${attrs}>${text}</button>`;
 const asset = path => 'part3/' + path.split('/').map(encodeURIComponent).join('/');
+let drillGroupIndex = 0;
+let drillIndex = 0;
+let drillAnswer;
+let drillHidden = false;
+const drillGroup = () => drillGroups[drillGroupIndex];
+const drillLesson = () => drillGroup().lessons[drillIndex];
 
 function clean(data) {
   if (data?.version !== 1 || !data.attempts || !data.phrases ||
@@ -712,13 +720,59 @@ function renderFinish() {
     <div data-player></div><div class="actions">${button('Nghe lại toàn đoạn','replay')}${button('Xong buổi học','done','class="primary"')}</div>`;
 }
 
+function renderDrill() {
+  const {title,lessons} = drillGroup();
+  const categories = drillGroups.length > 1 ? `<div class="actions" role="group" aria-label="Nhóm bài luyện">
+    ${drillGroups.map((category,index) => button(escape(category.title),'drill-group',
+      `data-index="${index}" aria-pressed="${index===drillGroupIndex}"`)).join('')}</div>` : '';
+  const heading = `${categories}<h2 tabindex="-1">${escape(title)}</h2>`;
+  const lesson = drillLesson();
+  if (!lesson) return `${heading}<p>Đã hoàn thành ${lessons.length} bài luyện.</p>
+    ${button('Luyện lại nhóm','drill-restart','class="primary"')}`;
+
+  const {dialogueId,sentenceIndex,lead,question,clue,choices,correct,explanation} = lesson;
+  const sentence = byId.get(dialogueId)?.sentences[sentenceIndex];
+  const play = button('Nghe đoạn audio','drill-play','class="primary"');
+  let content;
+  if (drillHidden) {
+    content = `<p>Nghe lại đoạn vừa học.</p><div class="actions">${play}
+      ${button('Xem lại giải thích','drill-explanation')}${button('Bài tiếp theo','drill-next')}</div>`;
+  } else if (drillAnswer === undefined) {
+    content = `<p>${escape(lead)}</p><div class="actions">${play}</div>
+      <fieldset class="drill-question"><legend>${escape(question)}</legend><div class="drill-choices" lang="en">
+      ${choices.map((choice,index) => button(escape(choice),'drill-answer',`data-index="${index}"`)).join('')}
+      </div></fieldset>${button('Chưa nghe ra','drill-answer','data-index="-1"')}`;
+  } else {
+    const start = sentence?.text.indexOf(clue) ?? -1;
+    const transcript = start < 0 ? escape(sentence?.text) :
+      escape(sentence.text.slice(0,start)) + '<mark>' + escape(clue) + '</mark>' +
+      escape(sentence.text.slice(start+clue.length));
+    const feedback = drillAnswer === correct ? 'Bạn đã chọn đúng.' :
+      drillAnswer === -1 ? 'Cùng nghe lại manh mối.' : 'Đáp án bạn chọn chưa khớp.';
+    content = `<section class="answer-text drill-explanation" aria-labelledby="drill-clue">
+      <h3 id="drill-clue" tabindex="-1">Manh mối</h3>
+      <p>${feedback} Đáp án <strong lang="en">${escape(choices[correct])}</strong></p>
+      <p lang="en">${transcript}</p><p>${escape(explanation)}</p>
+      </section><div class="actions">${play}${button('Ẩn chữ và nghe lại','drill-hide')}</div>`;
+  }
+  return `${heading}<p class="muted">Bài ${drillIndex+1}/${lessons.length}</p>${content}`;
+}
+
+function playDrill() {
+  const {dialogueId,sentenceIndex} = drillLesson();
+  const original = byId.get(dialogueId);
+  const sentence = original?.sentences[sentenceIndex];
+  if (sentence) void playSentence(original,sentence,sentenceId(sentence,sentenceIndex));
+  else notice.textContent = 'Không tìm thấy câu thoại cho bài luyện này.';
+}
+
 function render({scroll=false} = {}) {
   stopAudio();
   activeLanguageNote = undefined;
   pendingSelection = undefined;
   steps.innerHTML = Object.entries(labels).map(([id,label]) =>
     button(label,id,`${page===id?'aria-current="step"':''} ${id==='transcript'&&!attempt().checked?'disabled':''} ${id==='practice'&&!phrases().length?'disabled':''}`)).join('');
-  const views = {quiz:renderQuiz,transcript:renderTranscript,practice:renderPractice,review:renderReview,finish:renderFinish};
+  const views = {quiz:renderQuiz,drill:renderDrill,transcript:renderTranscript,practice:renderPractice,review:renderReview,finish:renderFinish};
   screen.innerHTML = `<div class="panel">${page==='done'?'<h2>Đã xong buổi học</h2><div class="actions">'+button('Ôn lại','review')+button('Làm bài','quiz','class="primary"')+'</div>':views[page]()}</div>`;
   if (page === 'quiz') fullAudio();
   if (page === 'transcript') combineMeaningBlanks();
@@ -833,6 +887,32 @@ function handleAction(event) {
   const {action,index,status,key} = control.dataset;
   const item = state.phrases[queue[queueIndex]];
   switch (action) {
+    case 'drill-play':
+      playDrill();
+      break;
+    case 'drill-answer':
+    case 'drill-explanation':
+      if (action === 'drill-answer') drillAnswer = Number(index);
+      drillHidden = false;
+      showPage('drill');
+      screen.querySelector('#drill-clue').focus({preventScroll:true});
+      break;
+    case 'drill-hide':
+      drillHidden = true;
+      showPage('drill');
+      screen.querySelector('[data-action="drill-explanation"]').focus({preventScroll:true});
+      playDrill();
+      break;
+    case 'drill-group':
+    case 'drill-restart':
+    case 'drill-next':
+      if (action === 'drill-group') drillGroupIndex = Number(index);
+      drillIndex = action === 'drill-next' ? drillIndex+1 : 0;
+      drillAnswer = undefined;
+      drillHidden = false;
+      showPage('drill');
+      screen.querySelector('h2').focus({preventScroll:true});
+      break;
     case 'check':
       if (Object.keys(attempt().answers).length !== group().questions.length) return;
       attempt().checked = true;

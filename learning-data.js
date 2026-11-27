@@ -44590,3 +44590,50 @@ Object.assign(quizApproved, {
     ]
   }
 });
+
+// Sentence indexes refer to the existing sentences array in part3/data.js.
+const listeningDrillGroups = [{
+  title: 'Hành động tương đương',
+  lessons: [
+    {
+      dialogueId: 't1-32',
+      sentenceIndex: 5,
+      lead: 'Nghe xem người phụ nữ định làm gì với đề xuất vừa nhận được.',
+      question: 'Người phụ nữ sẽ làm gì?',
+      clue: 'get in touch with the production manager',
+      choices: ['Meet with a customer', 'Contact the production manager', 'Send out a new recipe'],
+      correct: 1,
+      explanation: '“Get in touch with” nghĩa là liên lạc với ai đó, tương đương với “contact”.'
+    },
+    {
+      dialogueId: 't2-35',
+      sentenceIndex: 2,
+      lead: 'Nghe xem người nói sẽ chuẩn bị việc gì trong tháng này.',
+      question: 'Người nói định làm gì?',
+      clue: 'set up a meeting',
+      choices: ['Arrange a meeting', 'Cancel a meeting', 'Attend a rehearsal'],
+      correct: 0,
+      explanation: 'Trong ngữ cảnh này, “set up” nghĩa là thu xếp. “Arrange a meeting” cũng là thu xếp một cuộc họp.'
+    },
+    {
+      dialogueId: 't2-32',
+      sentenceIndex: 2,
+      lead: 'Nghe xem khách cần đến để làm gì.',
+      question: 'Người giao hàng gọi để khách làm gì?',
+      clue: 'pick up their food',
+      choices: ['Place another order', 'Pay for their order online', 'Collect their food'],
+      correct: 2,
+      explanation: '“Pick up” ở đây là đến lấy đồ. “Collect their food” diễn đạt cùng hành động nhận đồ ăn.'
+    },
+    {
+      dialogueId: 't2-44',
+      sentenceIndex: 1,
+      lead: 'Nghe xem người nói muốn tận dụng cơ hội này để làm gì.',
+      question: 'Họ muốn làm gì với sản phẩm mới?',
+      clue: 'showcase the product',
+      choices: ['Test the product', 'Show the product to others', 'Change the product design'],
+      correct: 1,
+      explanation: '“Showcase” nghĩa là giới thiệu hoặc trưng bày để người khác thấy sản phẩm, khớp với “show the product to others”.'
+    }
+  ]
+}];
