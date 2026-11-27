@@ -732,30 +732,63 @@ function renderDrill() {
 
   const {dialogueId,sentenceIndex,lead,question,clue,choices,correct,explanation} = lesson;
   const sentence = byId.get(dialogueId)?.sentences[sentenceIndex];
-  const play = button('Nghe đoạn audio','drill-play','class="primary"');
-  let content;
-  if (drillHidden) {
-    content = `<p>Nghe lại đoạn vừa học.</p><div class="actions">${play}
-      ${button('Xem lại giải thích','drill-explanation')}${button('Bài tiếp theo','drill-next')}</div>`;
-  } else if (drillAnswer === undefined) {
-    content = `<p>${escape(lead)}</p><div class="actions">${play}</div>
-      <fieldset class="drill-question"><legend>${escape(question)}</legend><div class="drill-choices" lang="en">
-      ${choices.map((choice,index) => button(escape(choice),'drill-answer',`data-index="${index}"`)).join('')}
-      </div></fieldset>${button('Chưa nghe ra','drill-answer','data-index="-1"')}`;
-  } else {
-    const start = sentence?.text.indexOf(clue) ?? -1;
-    const transcript = start < 0 ? escape(sentence?.text) :
-      escape(sentence.text.slice(0,start)) + '<mark>' + escape(clue) + '</mark>' +
-      escape(sentence.text.slice(start+clue.length));
-    const feedback = drillAnswer === correct ? 'Bạn đã chọn đúng.' :
-      drillAnswer === -1 ? 'Cùng nghe lại manh mối.' : 'Đáp án bạn chọn chưa khớp.';
-    content = `<section class="answer-text drill-explanation" aria-labelledby="drill-clue">
-      <h3 id="drill-clue" tabindex="-1">Manh mối</h3>
-      <p>${feedback} Đáp án <strong lang="en">${escape(choices[correct])}</strong></p>
-      <p lang="en">${transcript}</p><p>${escape(explanation)}</p>
-      </section><div class="actions">${play}${button('Ẩn chữ và nghe lại','drill-hide')}</div>`;
+  const start = sentence?.text.indexOf(clue) ?? -1;
+  const transcript = start < 0 ? escape(sentence?.text) :
+    escape(sentence.text.slice(0,start)) + '<mark>' + escape(clue) + '</mark>' +
+    escape(sentence.text.slice(start+clue.length));
+  return `${heading}<p class="muted">Bài ${drillIndex+1}/${lessons.length}</p>
+    <p>${escape(lead)}</p>
+    ${button('Nghe đoạn audio','drill-play','class="primary"')}
+    <fieldset class="drill-question">
+      <legend>${escape(question)}</legend>
+      <div id="drill-options">
+        <div class="drill-choices" lang="en">
+          ${choices.map((choice,index) => button(escape(choice),'drill-answer',`data-index="${index}"`)).join('')}
+        </div>
+        ${button('Chưa nghe ra','drill-answer','data-index="-1"')}
+      </div>
+    </fieldset>
+    <section class="answer-text drill-explanation" aria-labelledby="drill-clue" hidden>
+      <h3 id="drill-clue" tabindex="-1">Lời giải</h3>
+      <p id="drill-feedback" role="status"></p>
+      <p lang="en"><strong>${escape(clue)} ↔ ${escape(choices[correct])}</strong></p>
+      <p lang="en">${transcript}</p>
+      <p>${escape(explanation)}</p>
+    </section>
+    <div class="actions" id="drill-actions" hidden>
+      ${button('Ẩn chữ và nghe lại','drill-hide')}
+      ${button('Xem lại giải thích','drill-explanation')}
+      ${button('Bài tiếp theo','drill-next','class="primary"')}
+    </div>`;
+}
+
+function updateDrill() {
+  const answered = drillAnswer !== undefined;
+  const visible = answered && !drillHidden;
+  const previousScroll = window.scrollY;
+  const panel = screen.querySelector('.panel');
+  panel.style.minHeight = '';
+  if (visible) {
+    screen.querySelector('#drill-feedback').textContent = drillAnswer === drillLesson().correct
+      ? 'Bạn đã chọn đúng.'
+      : drillAnswer === -1 ? 'Cùng nghe lại manh mối.' : 'Đáp án bạn chọn chưa khớp.';
   }
-  return `${heading}<p class="muted">Bài ${drillIndex+1}/${lessons.length}</p>${content}`;
+  for (const control of screen.querySelectorAll('[data-action="drill-answer"]')) {
+    control.setAttribute('aria-pressed',String(Number(control.dataset.index) === drillAnswer));
+  }
+  screen.querySelector('#drill-options').hidden = drillHidden;
+  screen.querySelector('.drill-explanation').hidden = !visible;
+  screen.querySelector('#drill-actions').hidden = !answered;
+  screen.querySelector('[data-action="drill-hide"]').hidden = !visible;
+  screen.querySelector('[data-action="drill-explanation"]').hidden = !drillHidden;
+
+  // Keep enough room below the controls when the shorter view would clamp the scroll.
+  const scroller = document.scrollingElement;
+  if (previousScroll > scroller.scrollHeight - scroller.clientHeight) {
+    const panelTop = panel.getBoundingClientRect().top + window.scrollY;
+    panel.style.minHeight = `${Math.ceil(previousScroll + scroller.clientHeight - panelTop)}px`;
+  }
+  window.scrollTo({top:previousScroll,behavior:'instant'});
 }
 
 function playDrill() {
@@ -775,6 +808,7 @@ function render({scroll=false} = {}) {
   const views = {quiz:renderQuiz,drill:renderDrill,transcript:renderTranscript,practice:renderPractice,review:renderReview,finish:renderFinish};
   screen.innerHTML = `<div class="panel">${page==='done'?'<h2>Đã xong buổi học</h2><div class="actions">'+button('Ôn lại','review')+button('Làm bài','quiz','class="primary"')+'</div>':views[page]()}</div>`;
   if (page === 'quiz') fullAudio();
+  if (page === 'drill' && drillLesson()) updateDrill();
   if (page === 'transcript') combineMeaningBlanks();
   if (page === 'transcript' || page === 'practice') {
     screen.insertAdjacentHTML('beforeend','<dialog id="language-dialog" aria-labelledby="language-title"></dialog>');
@@ -894,12 +928,12 @@ function handleAction(event) {
     case 'drill-explanation':
       if (action === 'drill-answer') drillAnswer = Number(index);
       drillHidden = false;
-      showPage('drill');
+      updateDrill();
       screen.querySelector('#drill-clue').focus({preventScroll:true});
       break;
     case 'drill-hide':
       drillHidden = true;
-      showPage('drill');
+      updateDrill();
       screen.querySelector('[data-action="drill-explanation"]').focus({preventScroll:true});
       playDrill();
       break;

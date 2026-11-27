@@ -289,3 +289,11 @@ fieldset legend .question-focus{color:#B42318}
 .drill-choices button {text-align:start}
 .drill-explanation {margin-bottom:1rem;font-size:1rem}
 .drill-explanation p:last-child {margin-bottom:0}
+#drill-options > button {margin-top:.65rem}
+#drill-options button[aria-pressed="true"] {background:var(--soft);border-color:var(--red)}
+html:has(#drill-actions) {overflow-anchor:none}
+#drill-actions:has([data-action="drill-explanation"]:not([hidden])) {
+  position:sticky;
+  top:.5rem;
+  background:#fff;
+}
